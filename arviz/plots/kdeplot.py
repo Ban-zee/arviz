@@ -80,7 +80,7 @@ def plot_kde(
 
     Examples
     --------
-    Plot KDE with rugplot
+    Plot default KDE
 
     .. plot::
         :context: close-figs
