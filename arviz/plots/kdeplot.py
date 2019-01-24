@@ -80,7 +80,7 @@ def plot_kde(
 
     Examples
     --------
-    Plot default KDE
+    Plot KDE with rugplot
 
     .. plot::
         :context: close-figs
@@ -95,7 +95,7 @@ def plot_kde(
     .. plot::
         :context: close-figs
 
-        >>> az.plot_kde(mu_posterior,rug=True)
+        >>> az.plot_kde(mu_posterior, rug=True)
 
 
     Plot a cumulative distribution
