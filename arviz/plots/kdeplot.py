@@ -80,7 +80,7 @@ def plot_kde(
 
     Examples
     --------
-    Plot default KDE
+    Plot default KDE 
 
     .. plot::
         :context: close-figs
@@ -89,6 +89,7 @@ def plot_kde(
         >>> non_centered = az.load_arviz_data('non_centered_eight')
         >>> mu_posterior = np.concatenate(non_centered.posterior["mu"].values)
         >>> az.plot_kde(mu_posterior)
+
 
     Plot KDE with rugplot
 
