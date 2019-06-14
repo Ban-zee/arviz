@@ -58,7 +58,7 @@
         "warmup_time": -1
     },
     "benchmarks.TimeSuite.time_xrange": {
-        "code": "class TimeSuite:\n    def time_xrange(self):\n        d = self.d\n        for key in xrange(500):\n            x = d[key]\n\n    def setup(self):\n        self.d = {}\n        for x in range(500):\n            self.d[x] = None",
+        "code": "class TimeSuite:\n    def time_xrange(self):\n        data = np.random.rand(100_000)\n        x = az.bfmi(data)\n        return x\n\n    def setup(self):\n        self.d = {}\n        for x in range(500):\n            self.d[x] = None",
         "min_run_count": 2,
         "name": "benchmarks.TimeSuite.time_xrange",
         "number": 0,
@@ -70,7 +70,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "473d76d807f9873b39e527c0d0c3794e8e30e367afdf2614cb2ab190b5e120c1",
+        "version": "57c7cf18e551a09e0f519044163b57fe2a3802251cb9f87d4f46a8c769588ed9",
         "warmup_time": -1
     },
     "version": 2

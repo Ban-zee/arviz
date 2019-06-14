@@ -1,8 +1,11 @@
 # Write the benchmarking functions here.
 # See "Writing benchmarks" in the asv docs for more information.
+
+
 import numba as nb
-import arviz as az
 import numpy as np
+
+
 class TimeSuite:
     """
     An example benchmark that times the performance of various kinds
