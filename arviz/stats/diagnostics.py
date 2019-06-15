@@ -545,7 +545,7 @@ def ks_summary(pareto_tail_indices):
     df_k : dataframe
       Dataframe containing k diagnostic values.
     """
-    kcounts, _ = _histogram(pareto_tail_indices)
+    kcounts = _histogram(pareto_tail_indices)
     kprop = kcounts / len(pareto_tail_indices) * 100
     df_k = pd.DataFrame(
         dict(_=["(good)", "(ok)", "(bad)", "(very bad)"], Count=kcounts, Pct=kprop)

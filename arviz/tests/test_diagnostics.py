@@ -449,8 +449,8 @@ class TestDiagnostics:
         first = 0.1
         last = 0.5
         intervals = 100
-
-        gw_stat = geweke(np.random.randn(10000), first=first, last=last, intervals=intervals)
+        data = np.random.randn(100000)
+        gw_stat = geweke(data,first,last,intervals)
 
         # all geweke values should be between -1 and 1 for this many draws from a
         # normal distribution

@@ -19,7 +19,7 @@ from .stats_utils import (
     logsumexp as _logsumexp,
     ELPDData,stats_variance_2d as svar
 )
-from ..utils import _var_names
+from ..utils import _var_names, numba_check
 
 _log = logging.getLogger(__name__)
 
@@ -704,23 +704,17 @@ def r2_score(y_true, y_pred):
     r2: Bayesian R²
     r2_std: standard deviation of the Bayesian R².
     """
-    flag = False
-    try:
-        numba = importlib.import_module("numba")
-        flag = True
-    except ImportError:
-        flag = False
     if y_pred.ndim == 1:
-        if flag:
+        if numba_check():
             var_y_est = svar(y_pred)
             var_e = svar(y_true-y_pred)
         else:
             var_y_est = np.var(y_pred)
             var_e = np.var(y_true - y_pred)
     else:
-        if flag:
+        if numba_check():
             var_y_est = svar(y_pred.mean(0))
-            var_e = svar(y_true-y_pred)
+            var_e = svar(y_true-y_pred, axis=0)
         else:
             var_y_est = np.var(y_pred.mean(0))
             var_e = np.var(y_true - y_pred, 0)
@@ -1082,17 +1076,7 @@ def waic(data, pointwise=False, scale="deviance"):
         ufunc_kwargs=ufunc_kwargs,
         **kwargs
     )
-    flag = False
-    try:
-        numba = importlib.import_module("numba")
-        flag = True
-    except ImportError:
-        flag = False
-    if flag:
-        vars_lpd = svar(np.ndarray(log_likelihood.values))
-    else:
-        vars_lpd = log_likelihood.var(dim="samples")
-
+    vars_lpd = log_likelihood.var(dim="samples")
     warn_mg = False
     if np.any(vars_lpd > 0.4):
         warnings.warn(
@@ -1102,14 +1086,10 @@ def waic(data, pointwise=False, scale="deviance"):
         """
         )
         warn_mg = True
-
     waic_i = scale_value * (lppd_i - vars_lpd)
-    if flag:
-        waic_se = (n_data_points*svar(np.ndarray(waic_i.values)))**0.5
-    else:
-        waic_se = (n_data_points * np.var(waic_i.values)) ** 0.5
-    waic_sum = np.sum(waic_i.values)
-    p_waic = np.sum(vars_lpd.values)
+    waic_se = (n_data_points * np.var(waic_i)) ** 0.5
+    waic_sum = np.sum(waic_i)
+    p_waic = np.sum(vars_lpd)
 
     if pointwise:
         if np.equal(waic_sum, waic_i).all():  # pylint: disable=no-member
