@@ -4,7 +4,7 @@
 
 import numba as nb
 import numpy as np
-
+import arviz as az
 
 class TimeSuite:
     """

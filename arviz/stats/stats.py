@@ -1082,8 +1082,17 @@ def waic(data, pointwise=False, scale="deviance"):
         ufunc_kwargs=ufunc_kwargs,
         **kwargs
     )
+    flag = False
+    try:
+        numba = importlib.import_module("numba")
+        flag = True
+    except ImportError:
+        flag = False
+    if flag:
+        vars_lpd = svar(np.ndarray(log_likelihood.values))
+    else:
+        vars_lpd = log_likelihood.var(dim="samples")
 
-    vars_lpd = log_likelihood.var(dim="samples")
     warn_mg = False
     if np.any(vars_lpd > 0.4):
         warnings.warn(
@@ -1095,7 +1104,10 @@ def waic(data, pointwise=False, scale="deviance"):
         warn_mg = True
 
     waic_i = scale_value * (lppd_i - vars_lpd)
-    waic_se = (n_data_points * np.var(waic_i.values)) ** 0.5
+    if flag:
+        waic_se = (n_data_points*svar(np.ndarray(waic_i.values)))**0.5
+    else:
+        waic_se = (n_data_points * np.var(waic_i.values)) ** 0.5
     waic_sum = np.sum(waic_i.values)
     p_waic = np.sum(vars_lpd.values)
 

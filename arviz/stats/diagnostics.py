@@ -2,7 +2,7 @@
 """Diagnostic functions for ArviZ."""
 from collections.abc import Sequence
 import warnings
-
+import importlib
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -13,9 +13,10 @@ from .stats_utils import (
     autocov as _autocov,
     not_valid as _not_valid,
     wrap_xarray_ufunc as _wrap_xarray_ufunc,
+    stats_variance_2d as svar
 )
 from ..data import convert_to_dataset
-from ..utils import _var_names
+from ..utils import _var_names, conditional_jit, conditional_vect,numba_check
 
 
 __all__ = ["bfmi", "effective_sample_size", "ess", "rhat", "mcse", "geweke"]
@@ -445,6 +446,12 @@ def mcse(data, *, var_names=None, method="mean", prob=None):
     )
 
 
+@conditional_vect
+def _sqr(a, b):
+    return np.sqrt(a+b)
+
+
+@conditional_jit
 def geweke(ary, first=0.1, last=0.5, intervals=20):
     r"""Compute z-scores for convergence diagnostics.
 
@@ -510,11 +517,20 @@ def geweke(ary, first=0.1, last=0.5, intervals=20):
         last_slice = ary[int(end - last * (end - start)) :]
 
         z_score = first_slice.mean() - last_slice.mean()
-        z_score /= np.sqrt(first_slice.var() + last_slice.var())
+        if numba_check():
+            z_score /= _sqr(svar(first_slice)+svar(last_slice))
+        else:
+            z_score /= np.sqrt(first_slice.var() + last_slice.var())
 
         zscores.append([start, z_score])
 
     return np.array(zscores)
+
+
+@conditional_jit
+def _histogram(data):
+    kcounts, _ = np.histogram(data,bins=[-np.Inf, 0.5, 0.7, 1, np.Inf])
+    return kcounts
 
 
 def ks_summary(pareto_tail_indices):
@@ -530,7 +546,7 @@ def ks_summary(pareto_tail_indices):
     df_k : dataframe
       Dataframe containing k diagnostic values.
     """
-    kcounts, _ = np.histogram(pareto_tail_indices, bins=[-np.Inf, 0.5, 0.7, 1, np.Inf])
+    kcounts, _ = _histogram(pareto_tail_indices)
     kprop = kcounts / len(pareto_tail_indices) * 100
     df_k = pd.DataFrame(
         dict(_=["(good)", "(ok)", "(bad)", "(very bad)"], Count=kcounts, Pct=kprop)
@@ -568,7 +584,10 @@ def _bfmi(energy):
     """
     energy_mat = np.atleast_2d(energy)
     num = np.square(np.diff(energy_mat, axis=1)).mean(axis=1)  # pylint: disable=no-member
-    den = np.var(energy_mat, axis=1)
+    if numba_check():
+        den = svar(energy_mat, axis=1)
+    else:
+        den = np.var(energy_mat, axis=1)
     return num / den
 
 
