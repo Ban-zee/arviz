@@ -442,15 +442,14 @@ def stats_variance_2d(data, ddof=0, axis=1):
         a, b = data.shape
     except ValueError:
         return stats_variance_1d(data, ddof=ddof)
+    if axis == 1:
+        var = np.zeros(a)
+        for i in range(a):
+            var[i] = stats_variance_1d(data[i], ddof=ddof)
     else:
-        if axis == 1:
-            var = np.zeros(a)
-            for i in range(a):
-                var[i] = stats_variance_1d(data[i], ddof=ddof)
-        else:
-            var = np.zeros(b)
-            for i in range(b):
-                var[i] = stats_variance_1d(data[:, i], ddof=ddof)
-        return var
+        var = np.zeros(b)
+        for i in range(b):
+            var[i] = stats_variance_1d(data[:, i], ddof=ddof)
+    return var
 
 

@@ -720,7 +720,10 @@ def _ess(ary, relative=False):
     mean_var = np.mean(acov[:, 0]) * n_draw / (n_draw - 1.0)
     var_plus = mean_var * (n_draw - 1.0) / n_draw
     if n_chain > 1:
-        var_plus += np.var(chain_mean, ddof=1)
+        if numba_check():
+            var_plus += svar(chain_mean, ddof=1)
+        else:
+            var_plus += np.var(chain_mean, ddof=1)
 
     rho_hat_t = np.zeros(n_draw)
     rho_hat_even = 1.0
@@ -887,7 +890,11 @@ def _mcse_mean(ary):
     if _not_valid(ary, shape_kwargs=dict(min_draws=4, min_chains=1)):
         return np.nan
     ess = _ess_mean(ary)
-    sd = np.std(ary, ddof=1)
+    if numba_check():
+        ary = np.ravel(ary)
+        sd = np.sqrt(svar(ary, ddof=1))
+    else:
+        sd = np.std(ary, ddof=1)
     mcse_mean_value = sd / np.sqrt(ess)
     return mcse_mean_value
 
@@ -898,7 +905,11 @@ def _mcse_sd(ary):
     if _not_valid(ary, shape_kwargs=dict(min_draws=4, min_chains=1)):
         return np.nan
     ess = _ess_sd(ary)
-    sd = np.std(ary, ddof=1)
+    if numba_check():
+        ary = np.ravel(ary)
+        sd = np.sqrt(svar(ary, ddof=1))
+    else:
+        sd = np.std(ary, ddof=1)
     fac_mcse_sd = np.sqrt(np.exp(1) * (1 - 1 / ess) ** (ess - 1) - 1)
     mcse_sd_value = sd * fac_mcse_sd
     return mcse_sd_value
@@ -911,6 +922,28 @@ def _mcse_quantile(ary, prob):
         return np.nan
     mcse_q, *_ = _conv_quantile(ary, prob)
     return mcse_q
+
+
+def _circfuncs_common(samples, high, low):
+    samples = np.asarray(samples)
+    if samples.size == 0:
+        return np.nan, np.nan
+    return samples, angle(samples, low,high,np.pi)
+
+
+@conditional_vect
+def angle(samples, low, high, pi=np.pi):
+    ang = (samples - low)*2.*pi / (high - low)
+    return ang
+
+
+def _circular_standard_deviation(samples, high=2*np.pi, low=0, axis=None):
+    pi = np.pi
+    samples, ang = _circfuncs_common(samples, high, low)
+    S = np.sin(ang).mean(axis=axis)
+    C = np.cos(ang).mean(axis=axis)
+    R = np.hypot(S, C)
+    return ((high - low)/2.0/pi) * np.sqrt(-2*np.log(R))
 
 
 def _mc_error(ary, batches=5, circular=False):
@@ -946,19 +979,31 @@ def _mc_error(ary, batches=5, circular=False):
             return np.nan
         if batches == 1:
             if circular:
-                std = stats.circstd(ary, high=np.pi, low=-np.pi)
+                if numba_check():
+                    std = _circular_standard_deviation(ary, high=np.pi, low=-np.pi)
+                else:
+                    std = stats.circstd(ary, high=np.pi, low=-np.pi)
             else:
-                std = np.std(ary)
+                if numba_check():
+                    std = np.sqrt(svar(ary))
+                else:
+                    std = np.std(ary)
             return std / np.sqrt(len(ary))
 
         batched_traces = np.resize(ary, (batches, int(len(ary) / batches)))
 
         if circular:
             means = stats.circmean(batched_traces, high=np.pi, low=-np.pi, axis=1)
-            std = stats.circstd(means, high=np.pi, low=-np.pi)
+            if numba_check():
+                std = _circular_standard_deviation(means, high=np.pi, low=-np.pi)
+            else:
+                std = stats.circstd(means, high=np.pi, low=-np.pi)
         else:
             means = np.mean(batched_traces, 1)
-            std = np.std(means)
+            if numba_check():
+                std = np.sqrt(svar(means))
+            else:
+                std = np.std(means)
 
         return std / np.sqrt(batches)
 
