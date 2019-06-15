@@ -2,7 +2,6 @@
 """Diagnostic functions for ArviZ."""
 from collections.abc import Sequence
 import warnings
-import importlib
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -640,9 +639,15 @@ def _rhat(ary):
     # Calculate chain mean
     chain_mean = np.mean(ary, axis=1)
     # Calculate chain variance
-    chain_var = np.var(ary, axis=1, ddof=1)
+    if numba_check():
+        chain_var = svar(ary, axis=1, ddof=1)
+    else:
+        chain_var = np.var(ary, axis=1, ddof=1)
     # Calculate between-chain variance
-    between_chain_variance = num_samples * np.var(chain_mean, ddof=1)
+    if numba_check():
+        between_chain_variance = num_samples * svar(chain_mean, ddof=1)
+    else:
+        between_chain_variance = num_samples * np.var(chain_mean, ddof=1)
     # Calculate within-chain variance
     within_chain_variance = np.mean(chain_var)
     # Estimate of marginal posterior variance
