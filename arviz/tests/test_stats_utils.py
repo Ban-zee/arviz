@@ -4,12 +4,13 @@ from numpy.testing import assert_array_almost_equal
 import pytest
 from scipy.special import logsumexp
 
+from ..data import load_arviz_data
 from ..stats.stats_utils import (
     logsumexp as _logsumexp,
     make_ufunc,
     wrap_xarray_ufunc,
     not_valid,
-    ELPDData,
+    ELPDData,stats_variance_2d
 )
 
 
@@ -209,3 +210,26 @@ def test_valid_shape():
 def test_elpd_data_error():
     with pytest.raises(ValueError):
         ELPDData(data=[0, 1, 2], index=["not IC", "se", "p"]).__repr__()
+
+
+def test_stats_variance_1d():
+    data = np.random.rand(1_000_000)
+    assert np.allclose(np.var(data), stats_variance_2d(data))
+    assert np.allclose(np.var(data, ddof=1), stats_variance_2d(data, ddof=1))
+
+
+def test_stats_variance_2d():
+    data_1 = np.random.randn(1000, 1000)
+    data_2 = np.random.randn(1_000_000)
+    school = load_arviz_data("centered_eight").posterior["mu"].values
+    n_school = load_arviz_data("non_centered_eight").posterior["mu"].values
+    assert np.allclose(np.var(school, ddof=1, axis=1), stats_variance_2d(school, ddof=1, axis=1))
+    assert np.allclose(np.var(school, ddof=1, axis=0), stats_variance_2d(school, ddof=1, axis=0))
+    assert np.allclose(np.var(n_school, ddof=1, axis=1), stats_variance_2d(n_school, ddof=1, axis=1))
+    assert np.allclose(np.var(n_school, ddof=1, axis=0), stats_variance_2d(n_school, ddof=1, axis=0))
+    assert np.allclose(np.var(data_2), stats_variance_2d(data_2,))
+    assert np.allclose(np.var(data_2, ddof=1), stats_variance_2d(data_2, ddof=1))
+    assert np.allclose(np.var(data_1, axis=0), stats_variance_2d(data_1, axis=0))
+    assert np.allclose(np.var(data_1, axis=1), stats_variance_2d(data_1, axis=1))
+    assert np.allclose(np.var(data_1, axis=0, ddof=1), stats_variance_2d(data_1,axis=0, ddof=1))
+    assert np.allclose(np.var(data_1, axis=1, ddof=1), stats_variance_2d(data_1, axis=1, ddof=1))
