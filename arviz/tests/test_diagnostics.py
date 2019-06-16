@@ -20,6 +20,7 @@ from ..stats.diagnostics import (
     _z_scale,
     _conv_quantile,
     _split_chains,
+    _sqr
 )
 
 # For tests only, recommended value should be closer to 1.01-1.05
@@ -457,7 +458,12 @@ class TestDiagnostics:
         assert ((gw_stat[:, 1] > -1) | (gw_stat[:, 1] < 1)).all()
 
         assert gw_stat.shape[0] == intervals
-        assert 10000 * last - gw_stat[:, 0].max() == 1
+        assert 100000 * last - gw_stat[:, 0].max() == 1
+
+    def test_sqr(self):
+        x = np.random.rand(100)
+        y = np.random.rand(100)
+        assert np.allclose(_sqr(x, y), np.sqrt(x+y))
 
     def test_geweke_bad_interval(self):
         # lower bound

@@ -1087,9 +1087,9 @@ def waic(data, pointwise=False, scale="deviance"):
         )
         warn_mg = True
     waic_i = scale_value * (lppd_i - vars_lpd)
-    waic_se = (n_data_points * np.var(waic_i)) ** 0.5
-    waic_sum = np.sum(waic_i)
-    p_waic = np.sum(vars_lpd)
+    waic_se = (n_data_points * np.var(waic_i.values)) ** 0.5
+    waic_sum = np.sum(waic_i.values)
+    p_waic = np.sum(vars_lpd.values)
 
     if pointwise:
         if np.equal(waic_sum, waic_i).all():  # pylint: disable=no-member

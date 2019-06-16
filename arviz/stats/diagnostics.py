@@ -517,7 +517,7 @@ def geweke(ary, first=0.1, last=0.5, intervals=20):
 
         z_score = first_slice.mean() - last_slice.mean()
         if numba_check():
-            z_score /= _sqr(svar(first_slice)+svar(last_slice))
+            z_score /= _sqr(svar(first_slice), svar(last_slice))
         else:
             z_score /= np.sqrt(first_slice.var() + last_slice.var())
 
@@ -924,7 +924,7 @@ def _mcse_quantile(ary, prob):
     return mcse_q
 
 
-def _circfuncs_common(samples, high, low):
+def _circfunc(samples, high, low):
     samples = np.asarray(samples)
     if samples.size == 0:
         return np.nan, np.nan
@@ -939,7 +939,7 @@ def angle(samples, low, high, pi=np.pi):
 
 def _circular_standard_deviation(samples, high=2*np.pi, low=0, axis=None):
     pi = np.pi
-    samples, ang = _circfuncs_common(samples, high, low)
+    samples, ang = _circfunc(samples, high, low)
     S = np.sin(ang).mean(axis=axis)
     C = np.cos(ang).mean(axis=axis)
     R = np.hypot(S, C)
