@@ -225,7 +225,7 @@ class TestDiagnostics:
         assert np.allclose(a, school)
         assert np.allclose(b, _angle(school, 4, 8, np.pi))
 
-    @pytest.mark.parametrize("data",(np.random.rand(100), np.random.rand(100,100), np.random.rand(100,100,100)))
+    @pytest.mark.parametrize("data",(np.random.randn(100), np.random.randn(100,100), np.random.randn(100,100,100)))
     def test_circular_standard_deviation_1d(self, data):
         high = 8
         low = 4
