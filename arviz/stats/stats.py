@@ -17,7 +17,8 @@ from .stats_utils import (
     make_ufunc as _make_ufunc,
     wrap_xarray_ufunc as _wrap_xarray_ufunc,
     logsumexp as _logsumexp,
-    ELPDData,stats_variance_2d as svar
+    ELPDData,
+    stats_variance_2d as svar,
 )
 from ..utils import _var_names, numba_check
 
@@ -707,14 +708,14 @@ def r2_score(y_true, y_pred):
     if y_pred.ndim == 1:
         if numba_check():
             var_y_est = svar(y_pred)
-            var_e = svar(y_true-y_pred)
+            var_e = svar(y_true - y_pred)
         else:
             var_y_est = np.var(y_pred)
             var_e = np.var(y_true - y_pred)
     else:
         if numba_check():
             var_y_est = svar(y_pred.mean(0))
-            var_e = svar(y_true-y_pred, axis=0)
+            var_e = svar(y_true - y_pred, axis=0)
         else:
             var_y_est = np.var(y_pred.mean(0))
             var_e = np.var(y_true - y_pred, 0)

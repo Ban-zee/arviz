@@ -434,8 +434,8 @@ def stats_variance_1d(data, ddof=0):
     for i in data:
         a = a + i
         b = b + i * i
-    var =  b / (len(data)) - ((a / (len(data))) ** 2)
-    var = var *(len(data)/(len(data)-ddof))
+    var = b / (len(data)) - ((a / (len(data))) ** 2)
+    var = var * (len(data) / (len(data) - ddof))
     return var
 
 
@@ -453,5 +453,3 @@ def stats_variance_2d(data, ddof=0, axis=1):
         for i in range(b):
             var[i] = stats_variance_1d(data[:, i], ddof=ddof)
     return var
-
-
