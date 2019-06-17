@@ -1,8 +1,5 @@
 {
   "test_diagnostics.py::TestDiagnostics::()::test_deterministic": true,
-  "test_diagnostics.py::TestDiagnostics::()::test_multichain_summary_array[1-100]": true,
-  "test_diagnostics.py::TestDiagnostics::()::test_multichain_summary_array[2-100]": true,
-  "test_diagnostics.py::TestDiagnostics::()::test_multichain_summary_array[None-100]": true,
   "test_stats_utils.py::test_wrap_ufunc_output[False-quantile0]": true,
   "test_stats_utils.py::test_wrap_ufunc_output[False-quantile1]": true,
   "test_stats_utils.py::test_wrap_ufunc_output[True-quantile0]": true,

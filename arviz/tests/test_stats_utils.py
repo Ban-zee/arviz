@@ -10,7 +10,8 @@ from ..stats.stats_utils import (
     make_ufunc,
     wrap_xarray_ufunc,
     not_valid,
-    ELPDData,stats_variance_2d
+    ELPDData,
+    stats_variance_2d,
 )
 
 
@@ -225,11 +226,15 @@ def test_stats_variance_2d():
     n_school = load_arviz_data("non_centered_eight").posterior["mu"].values
     assert np.allclose(np.var(school, ddof=1, axis=1), stats_variance_2d(school, ddof=1, axis=1))
     assert np.allclose(np.var(school, ddof=1, axis=0), stats_variance_2d(school, ddof=1, axis=0))
-    assert np.allclose(np.var(n_school, ddof=1, axis=1), stats_variance_2d(n_school, ddof=1, axis=1))
-    assert np.allclose(np.var(n_school, ddof=1, axis=0), stats_variance_2d(n_school, ddof=1, axis=0))
-    assert np.allclose(np.var(data_2), stats_variance_2d(data_2,))
+    assert np.allclose(
+        np.var(n_school, ddof=1, axis=1), stats_variance_2d(n_school, ddof=1, axis=1)
+    )
+    assert np.allclose(
+        np.var(n_school, ddof=1, axis=0), stats_variance_2d(n_school, ddof=1, axis=0)
+    )
+    assert np.allclose(np.var(data_2), stats_variance_2d(data_2))
     assert np.allclose(np.var(data_2, ddof=1), stats_variance_2d(data_2, ddof=1))
     assert np.allclose(np.var(data_1, axis=0), stats_variance_2d(data_1, axis=0))
     assert np.allclose(np.var(data_1, axis=1), stats_variance_2d(data_1, axis=1))
-    assert np.allclose(np.var(data_1, axis=0, ddof=1), stats_variance_2d(data_1,axis=0, ddof=1))
+    assert np.allclose(np.var(data_1, axis=0, ddof=1), stats_variance_2d(data_1, axis=0, ddof=1))
     assert np.allclose(np.var(data_1, axis=1, ddof=1), stats_variance_2d(data_1, axis=1, ddof=1))
