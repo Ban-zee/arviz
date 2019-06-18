@@ -1,40 +1,79 @@
 # Write the benchmarking functions here.
 # See "Writing benchmarks" in the asv docs for more information.
-
-
-import numba as nb
 import numpy as np
-import arviz as az
+import scipy.stats as st
 
-class TimeSuite:
-    """
-    An example benchmark that times the performance of various kinds
-    of iterating over dictionaries in Python.
-    """
-    def setup(self):
-        self.d = {}
-        for x in range(500):
-            self.d[x] = None
+class Hist:
+	def time_histogram(self):
+		try:
+			data = np.random.rand(10000, 1000)
+			import numba
 
-    def time_keys(self):
-        for key in self.d.keys():
-            pass
-
-    def time_iterkeys(self):
-        for key in self.d.iterkeys():
-            pass
-
-    def time_range(self):
-        d = self.d
-        for key in range(500):
-            x = d[key]
-
-    def time_xrange(self):
-        data = np.random.rand(100_000)
-        x = az.bfmi(data)
-        return x
+			@numba.njit(cache=True)
+			def _hist(data):
+				return np.histogram(data, bins=100)
+			return _hist(data)
+		except ImportError:
+			return np.histogram(data, bins=100)
 
 
-class MemSuite:
-    def mem_list(self):
-        return [0] * 256
+class Variance:
+	def time_variance(self):
+		try:
+			data_1 = np.random.randn(100000)
+			data_2 = np.random.randn(10000,10000)
+			import numba
+
+			@numba.njit(cache=True)
+			def stats_variance_1d(data, ddof=0):
+				a,b = 0,0
+				for i in data:
+					a = a + i
+					b = b + i * i
+				var = b / (len(data)) - ((a / (len(data))) ** 2)
+				var = var * (len(data) / (len(data) - ddof))
+				return var
+
+			@numba.njit(cache=True)
+			def stats_variance_2d(data, ddof=0, axis=1):
+				a, b = data.shape
+				if axis == 1:
+					var = np.zeros(a)
+					for i in range(a):
+						var[i] = stats_variance_1d(data[i], ddof=ddof)
+				else:
+					var = np.zeros(b)
+					for i in range(b):
+						var[i] = stats_variance_1d(data[:, i], ddof=ddof)
+				return var
+			return stats_variance_2d(data_2)
+		except ImportError:
+			return np.var(data_2, axis=1)
+
+class CircStd:
+    def time_circ_std(self):
+        try:
+            data = np.random.randn(10000,1000)
+            import numba
+            def _circfunc(samples, high, low):
+                samples = np.asarray(samples)
+                if samples.size == 0:
+                    return np.nan, np.nan
+                return samples, _angle(samples, low, high, np.pi)
+
+
+            @numba.vectorize
+            def _angle(samples, low, high, pi=np.pi):
+                ang = (samples - low) * 2.0 * pi / (high - low)
+                return ang
+
+
+            def _circular_standard_deviation(samples, high=2 * np.pi, low=0, axis=None):
+                pi = np.pi
+                samples, ang = _circfunc(samples, high, low)
+                S = np.sin(ang).mean(axis=axis)
+                C = np.cos(ang).mean(axis=axis)
+                R = np.hypot(S, C)
+                return ((high - low) / 2.0 / pi) * np.sqrt(-2 * np.log(R))
+        except ImportError:
+            return st.circstd(data)

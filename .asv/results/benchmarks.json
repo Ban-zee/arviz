@@ -1,18 +1,8 @@
 {
-    "benchmarks.MemSuite.mem_list": {
-        "code": "class MemSuite:\n    def mem_list(self):\n        return [0] * 256",
-        "name": "benchmarks.MemSuite.mem_list",
-        "param_names": [],
-        "params": [],
-        "timeout": 60.0,
-        "type": "memory",
-        "unit": "bytes",
-        "version": "abe86bab484550a681c61d7bb6eb081fbd37eb6d5009eba1df85c935530577b9"
-    },
-    "benchmarks.TimeSuite.time_iterkeys": {
-        "code": "class TimeSuite:\n    def time_iterkeys(self):\n        for key in self.d.iterkeys():\n            pass\n\n    def setup(self):\n        self.d = {}\n        for x in range(500):\n            self.d[x] = None",
+    "benchmarks.CircStd.time_circ_std": {
+        "code": "class CircStd:\n    def time_circ_std(self):\n        try:\n            data = np.random.randn(10000,1000)\n            import numba\n            def _circfunc(samples, high, low):\n                samples = np.asarray(samples)\n                if samples.size == 0:\n                    return np.nan, np.nan\n                return samples, _angle(samples, low, high, np.pi)\n    \n    \n            @numba.vectorize\n            def _angle(samples, low, high, pi=np.pi):\n                ang = (samples - low) * 2.0 * pi / (high - low)\n                return ang\n    \n    \n            def _circular_standard_deviation(samples, high=2 * np.pi, low=0, axis=None):\n                pi = np.pi\n                samples, ang = _circfunc(samples, high, low)\n                S = np.sin(ang).mean(axis=axis)\n                C = np.cos(ang).mean(axis=axis)\n                R = np.hypot(S, C)\n                return ((high - low) / 2.0 / pi) * np.sqrt(-2 * np.log(R))\n        except ImportError:\n            return st.circstd(data)",
         "min_run_count": 2,
-        "name": "benchmarks.TimeSuite.time_iterkeys",
+        "name": "benchmarks.CircStd.time_circ_std",
         "number": 0,
         "param_names": [],
         "params": [],
@@ -22,13 +12,13 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "8cbbcf6e9f798af859479108fa2aedee542bd626e61d71f54acd8a0d6300e6e6",
+        "version": "8336f6745c7c18e7351b0d63276786a51250015a86eb99ec19f1cc7e598db585",
         "warmup_time": -1
     },
-    "benchmarks.TimeSuite.time_keys": {
-        "code": "class TimeSuite:\n    def time_keys(self):\n        for key in self.d.keys():\n            pass\n\n    def setup(self):\n        self.d = {}\n        for x in range(500):\n            self.d[x] = None",
+    "benchmarks.Hist.time_histogram": {
+        "code": "class Hist:\n    def time_histogram(self):\n    \ttry:\n    \t\tdata = np.random.rand(10000, 1000)\n    \t\timport numba\n    \n    \t\t@numba.njit(cache=True)\n    \t\tdef _hist(data):\n    \t\t\treturn np.histogram(data, bins=100)\n    \t\treturn _hist(data)\n    \texcept ImportError:\n    \t\treturn np.histogram(data, bins=100)",
         "min_run_count": 2,
-        "name": "benchmarks.TimeSuite.time_keys",
+        "name": "benchmarks.Hist.time_histogram",
         "number": 0,
         "param_names": [],
         "params": [],
@@ -38,13 +28,13 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "86e015a3c40c52da31e4185fff7c7176c38c5e1e1e4aba71912db0b388225191",
+        "version": "d67dfa5dadd652b35c9f25be62df9b1984a8d58a00a54e0e1bac3aec8de05f23",
         "warmup_time": -1
     },
-    "benchmarks.TimeSuite.time_range": {
-        "code": "class TimeSuite:\n    def time_range(self):\n        d = self.d\n        for key in range(500):\n            x = d[key]\n\n    def setup(self):\n        self.d = {}\n        for x in range(500):\n            self.d[x] = None",
+    "benchmarks.Variance.time_variance": {
+        "code": "class Variance:\n    def time_variance(self):\n    \ttry:\n    \t\tdata_1 = np.random.randn(100000)\n    \t\tdata_2 = np.random.randn(10000,10000)\n    \t\timport numba\n    \n    \t\t@numba.njit(cache=True)\n    \t\tdef stats_variance_1d(data, ddof=0):\n    \t\t\ta,b = 0,0\n    \t\t\tfor i in data:\n    \t\t\t\ta = a + i\n    \t\t\t\tb = b + i * i\n    \t\t\tvar = b / (len(data)) - ((a / (len(data))) ** 2)\n    \t\t\tvar = var * (len(data) / (len(data) - ddof))\n    \t\t\treturn var\n    \n    \t\t@numba.njit(cache=True)\n    \t\tdef stats_variance_2d(data, ddof=0, axis=1):\n    \t\t\ta, b = data.shape\n    \t\t\tif axis == 1:\n    \t\t\t\tvar = np.zeros(a)\n    \t\t\t\tfor i in range(a):\n    \t\t\t\t\tvar[i] = stats_variance_1d(data[i], ddof=ddof)\n    \t\t\telse:\n    \t\t\t\tvar = np.zeros(b)\n    \t\t\t\tfor i in range(b):\n    \t\t\t\t\tvar[i] = stats_variance_1d(data[:, i], ddof=ddof)\n    \t\t\treturn var\n    \t\treturn stats_variance_2d(data_2)\n    \texcept ImportError:\n    \t\treturn np.var(data_2, axis=1)",
         "min_run_count": 2,
-        "name": "benchmarks.TimeSuite.time_range",
+        "name": "benchmarks.Variance.time_variance",
         "number": 0,
         "param_names": [],
         "params": [],
@@ -54,23 +44,7 @@
         "timeout": 60.0,
         "type": "time",
         "unit": "seconds",
-        "version": "cc3e85248a6284df968bcf8afe866da285261eb2487c10e9dd9e2d17a05deb47",
-        "warmup_time": -1
-    },
-    "benchmarks.TimeSuite.time_xrange": {
-        "code": "class TimeSuite:\n    def time_xrange(self):\n        data = np.random.rand(100_000)\n        x = az.bfmi(data)\n        return x\n\n    def setup(self):\n        self.d = {}\n        for x in range(500):\n            self.d[x] = None",
-        "min_run_count": 2,
-        "name": "benchmarks.TimeSuite.time_xrange",
-        "number": 0,
-        "param_names": [],
-        "params": [],
-        "processes": 2,
-        "repeat": 0,
-        "sample_time": 0.01,
-        "timeout": 60.0,
-        "type": "time",
-        "unit": "seconds",
-        "version": "57c7cf18e551a09e0f519044163b57fe2a3802251cb9f87d4f46a8c769588ed9",
+        "version": "4cd7e090636601f109a3001485bd517fd1ddada6e03f8248f454732e23b92dfd",
         "warmup_time": -1
     },
     "version": 2
