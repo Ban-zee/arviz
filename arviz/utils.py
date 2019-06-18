@@ -113,7 +113,7 @@ def conditional_vect(function=None, **kwargs): # noqa: D202
 
 
 def numba_check():
-    """Checks if numba is installed or not"""
+    """Check if numba is installed."""
     flag = False
     try:
         numba = importlib.import_module("numba")
