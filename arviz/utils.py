@@ -82,7 +82,7 @@ def conditional_jit(function=None, **kwargs):  # noqa: D202
         return wrapper
 
 
-def conditional_vect(function=None, **kwargs): # noqa: D202
+def conditional_vect(function=None, **kwargs):  # noqa: D202
     """Use numba's vectorize decorator if numba is installed.
 
     Notes
