@@ -82,8 +82,9 @@ def conditional_jit(function=None, **kwargs):  # noqa: D202
         return wrapper
 
 
-def conditional_vect(function=None, **kwargs):
+def conditional_vect(function=None, **kwargs): # noqa: D202
     """Use numba's vectorize decorator if numba is installed.
+
     Notes
     -----
         If called without arguments  then return wrapped function.
@@ -94,6 +95,7 @@ def conditional_vect(function=None, **kwargs):
         @conditional_vect(nopython=True)
         def my_func():
             return
+
     """
 
     def wrapper(function):
@@ -111,6 +113,7 @@ def conditional_vect(function=None, **kwargs):
 
 
 def numba_check():
+    """Checks if numba is installed or not"""
     flag = False
     try:
         numba = importlib.import_module("numba")
