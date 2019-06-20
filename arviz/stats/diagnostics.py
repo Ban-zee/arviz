@@ -16,9 +16,11 @@ from .stats_utils import (
 )
 from ..data import convert_to_dataset
 from ..utils import _var_names, conditional_jit, conditional_vect
-from .. import _numba_flag
+from .. import numba_flag
 
 __all__ = ["bfmi", "effective_sample_size", "ess", "rhat", "mcse", "geweke"]
+
+_numba_flag = numba_flag
 
 
 def bfmi(data):

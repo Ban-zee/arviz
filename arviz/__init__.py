@@ -5,7 +5,7 @@ __version__ = "0.4.1"
 import os
 import logging
 from matplotlib.pyplot import style
-from .utils import numba_check
+import importlib
 
 # add ArviZ's styles to matplotlib's styles
 arviz_style_path = os.path.join(os.path.dirname(__file__), "plots", "styles")
@@ -14,7 +14,29 @@ style.core.reload_library()
 
 # Configure logging before importing arviz internals
 _log = logging.getLogger("arviz")
-_numba_flag = numba_check()
+
+
+def numba_check():
+    numba = importlib.util.find_spec("numba")
+    return numba is not None
+
+
+numba_flag = numba_check()
+
+
+def disable_numba():
+    global numba_flag
+    numba_flag = False
+
+
+def enable_numba():
+    global numba_flag
+    numba_flag = True
+
+
+disable_numba()
+enable_numba()
+
 
 if not logging.root.handlers:
     handler = logging.StreamHandler()

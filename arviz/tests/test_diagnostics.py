@@ -556,3 +556,5 @@ class TestDiagnostics:
         if chains is None:
             chains = 1
         assert split_data.shape == (chains * 2, draws // 2)
+
+

@@ -19,12 +19,14 @@ from .stats_utils import (
     ELPDData,
     stats_variance_2d as svar,
 )
-from .. import _numba_flag
+from .. import numba_flag
 from ..utils import _var_names
 
 _log = logging.getLogger(__name__)
 
 __all__ = ["compare", "hpd", "loo", "psislw", "r2_score", "summary", "waic"]
+
+_numba_flag = numba_flag
 
 
 def compare(
