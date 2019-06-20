@@ -23,7 +23,6 @@ def numba_check():
 
 numba_flag = numba_check()
 
-
 def disable_numba():
     global numba_flag
     numba_flag = False
