@@ -15,8 +15,8 @@ from .stats_utils import (
     stats_variance_2d as svar,
 )
 from ..data import convert_to_dataset
-from ..utils import _var_names, conditional_jit, conditional_vect, numba_check
-
+from ..utils import _var_names, conditional_jit, conditional_vect
+from .. import _numba_flag
 
 __all__ = ["bfmi", "effective_sample_size", "ess", "rhat", "mcse", "geweke"]
 
@@ -511,7 +511,7 @@ def geweke(ary, first=0.1, last=0.5, intervals=20):
         last_slice = ary[int(end - last * (end - start)) :]
 
         z_score = first_slice.mean() - last_slice.mean()
-        if numba_check():
+        if _numba_flag:
             z_score /= _sqr(svar(first_slice), svar(last_slice))
         else:
             z_score /= np.sqrt(first_slice.var() + last_slice.var())
@@ -540,7 +540,10 @@ def ks_summary(pareto_tail_indices):
     df_k : dataframe
       Dataframe containing k diagnostic values.
     """
-    kcounts = _histogram(pareto_tail_indices)
+    if _numba_flag:
+        kcounts = _histogram(pareto_tail_indices)
+    else:
+        kcounts, _ = np.histogram(pareto_tail_indices, bins=[-np.Inf, 0.5, 0.7, 1, np.Inf])
     kprop = kcounts / len(pareto_tail_indices) * 100
     df_k = pd.DataFrame(
         dict(_=["(good)", "(ok)", "(bad)", "(very bad)"], Count=kcounts, Pct=kprop)
@@ -578,7 +581,7 @@ def _bfmi(energy):
     """
     energy_mat = np.atleast_2d(energy)
     num = np.square(np.diff(energy_mat, axis=1)).mean(axis=1)  # pylint: disable=no-member
-    if numba_check():
+    if _numba_flag:
         den = svar(energy_mat, axis=1)
     else:
         den = np.var(energy_mat, axis=1)
@@ -634,12 +637,12 @@ def _rhat(ary):
     # Calculate chain mean
     chain_mean = np.mean(ary, axis=1)
     # Calculate chain variance
-    if numba_check():
+    if _numba_flag:
         chain_var = svar(ary, axis=1, ddof=1)
     else:
         chain_var = np.var(ary, axis=1, ddof=1)
     # Calculate between-chain variance
-    if numba_check():
+    if _numba_flag:
         between_chain_variance = num_samples * svar(chain_mean, ddof=1)
     else:
         between_chain_variance = num_samples * np.var(chain_mean, ddof=1)
@@ -715,7 +718,7 @@ def _ess(ary, relative=False):
     mean_var = np.mean(acov[:, 0]) * n_draw / (n_draw - 1.0)
     var_plus = mean_var * (n_draw - 1.0) / n_draw
     if n_chain > 1:
-        if numba_check():
+        if _numba_flag:
             var_plus += svar(chain_mean, ddof=1)
         else:
             var_plus += np.var(chain_mean, ddof=1)
@@ -885,7 +888,7 @@ def _mcse_mean(ary):
     if _not_valid(ary, shape_kwargs=dict(min_draws=4, min_chains=1)):
         return np.nan
     ess = _ess_mean(ary)
-    if numba_check():
+    if _numba_flag:
         ary = np.ravel(ary)
         sd = np.sqrt(svar(ary, ddof=1))
     else:
@@ -900,7 +903,7 @@ def _mcse_sd(ary):
     if _not_valid(ary, shape_kwargs=dict(min_draws=4, min_chains=1)):
         return np.nan
     ess = _ess_sd(ary)
-    if numba_check():
+    if _numba_flag:
         ary = np.ravel(ary)
         sd = np.sqrt(svar(ary, ddof=1))
     else:
@@ -974,12 +977,12 @@ def _mc_error(ary, batches=5, circular=False):
             return np.nan
         if batches == 1:
             if circular:
-                if numba_check():
+                if _numba_flag:
                     std = _circular_standard_deviation(ary, high=np.pi, low=-np.pi)
                 else:
                     std = stats.circstd(ary, high=np.pi, low=-np.pi)
             else:
-                if numba_check():
+                if _numba_flag:
                     std = np.sqrt(svar(ary))
                 else:
                     std = np.std(ary)
@@ -989,13 +992,13 @@ def _mc_error(ary, batches=5, circular=False):
 
         if circular:
             means = stats.circmean(batched_traces, high=np.pi, low=-np.pi, axis=1)
-            if numba_check():
+            if _numba_flag:
                 std = _circular_standard_deviation(means, high=np.pi, low=-np.pi)
             else:
                 std = stats.circstd(means, high=np.pi, low=-np.pi)
         else:
             means = np.mean(batched_traces, 1)
-            if numba_check():
+            if _numba_flag:
                 std = np.sqrt(svar(means))
             else:
                 std = np.std(means)
